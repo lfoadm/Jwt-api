@@ -4,6 +4,13 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Exception;
+use PhpParser\Node\Stmt\Return_;
+use Symfony\Component\HttpFoundation\Response;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenBlacklistedException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
 class Handler extends ExceptionHandler
 {
@@ -23,8 +30,25 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->renderable(function (TokenBlacklistedException $e, $request) {
+            return response(['error' => 'Token não pode ser utilizado'], Response::HTTP_BAD_REQUEST);
         });
+
+        $this->renderable(function (TokenInvalidException $e, $request) {
+            return response(['error' => 'Token inválido'], Response::HTTP_BAD_REQUEST);
+        });
+
+        $this->renderable(function (TokenExpiredException $e, $request) {
+            return response(['error' => 'Seu Token expirou'], Response::HTTP_BAD_REQUEST);
+        });
+
+        $this->renderable(function (JWTException $e, $request) {
+            return response(['error' => 'Token não fornecido'], Response::HTTP_BAD_REQUEST);
+        });
+
+
+        // $this->reportable(function (Throwable $e) {
+        //     //
+        // });
     }
 }
