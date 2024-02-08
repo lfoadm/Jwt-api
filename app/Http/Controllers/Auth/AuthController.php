@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Exceptions\Admin\UserHasBeenTakenException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\SignupRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
 
 class AuthController extends Controller
 {
@@ -34,10 +37,17 @@ class AuthController extends Controller
         return $this->respondWithToken($token);
     }
 
-    public function signup(Request $request)
+    public function signup(SignupRequest $request)
     {
-        User::create($request->all());
-        return $this->login($request);
+        //MODEL JÁ VEM HASHED NA VERSÃO NOVA DO LARAVEL
+            // $input['password'] = bcrypt($input['password']); 
+        $input = $request->validated();
+        if(User::query()->whereEmail($input['email'])->exists()) {
+            throw new UserHasBeenTakenException();
+        }
+        $user = User::query()->create($input);
+
+    return $this->login($request);
     }
 
     /**
@@ -86,7 +96,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
-            'user' => auth()->user()->name,
+            'user' => auth()->user()->first_name . ' ' . auth()->user()->last_name,
         ]);
     }
 }
