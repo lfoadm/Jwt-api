@@ -6,6 +6,7 @@ use App\Exceptions\Admin\UserHasBeenTakenException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\SignupRequest;
 use App\Models\User;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
 
 
@@ -57,7 +58,14 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth()->user());
+        // return response()->json(auth()->user());
+        return response()->json([
+            "id" => auth()->user()->id,
+            "first_name" => auth()->user()->first_name,
+            "last_name" => auth()->user()->last_name,
+            "email" => auth()->user()->email,
+            "created_at" => auth()->user()->created_at->diffForHumans(),
+        ]);
     }
 
     /**
@@ -65,10 +73,11 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function logout()
+    public function logout(Request $request)
     {
         auth()->logout();
-
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return response()->json(['message' => 'Successfully logged out']);
     }
 
@@ -94,8 +103,10 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'expires_in' => auth()->factory()->getTTL() * 1,
             'user' => auth()->user()->first_name . ' ' . auth()->user()->last_name,
+            'created_at' => auth()->user()->created_at->diffForHumans(),
+
         ]);
     }
 }

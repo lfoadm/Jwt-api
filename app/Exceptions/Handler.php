@@ -39,7 +39,10 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (TokenExpiredException $e, $request) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             return response(['error' => 'Seu Token expirou'], Response::HTTP_BAD_REQUEST);
+            // return redirect()->route('login');
         });
 
         $this->renderable(function (JWTException $e, $request) {
